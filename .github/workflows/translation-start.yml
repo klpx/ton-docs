@@ -48,6 +48,17 @@ jobs:
           filename: .github/translation-work.issue-template.md
         id: create-issue
 
+      - name: Output issue link
+        run: |
+          echo "Workflow created issue: ${{ steps.create-issue.outputs.issue_url }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Output issue link in summary
+        run: |
+          echo "### :rocket: **WORKFLOW RESULT**" >> $GITHUB_STEP_SUMMARY
+          echo "**Created issue:** [${{ steps.create-issue.outputs.issue_url }}](${{ steps.create-issue.outputs.issue_url }})" >> $GITHUB_STEP_SUMMARY
+          echo "👉 **Click this link to view the issue**" >> $GITHUB_STEP_SUMMARY
+
       - name: Setup new branches
         env:
           translationBranch: ${{ format('translation-{0}-{1}', steps.create-issue.outputs.number, inputs.language) }}
