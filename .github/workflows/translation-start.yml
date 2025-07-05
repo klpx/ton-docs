@@ -1,4 +1,4 @@
-name: Translation - Start
+name: Translations - Start Translation
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
           - ja
           - ko
           - zh-CN
-      origin_branch:
+      originBranch:
         description: 'Branch to translate'
         required: true
         default: main
@@ -26,21 +26,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Setup / Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: ${{ inputs.originBranch || 'main' }}
 
-      - name: Setup Node.js
+      - name: Setup / Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: Install Crowdin CLI
+      - name: Setup / Install Crowdin CLI
         run: npm install -g @crowdin/cli
+
+      - name: Creating issue to track translation process
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/translation-work.issue-template.md
+        id: create-issue
+
+      - name: Setup new branches
+        env:
+          translationBranch: ${{ format('translation-{0}-{1}', steps.create-issue.outputs.number, inputs.language) }}
+        run: >
+          echo "translationBranch=$translationBranch" >> $GITHUB_ENV
 
       - name: Push source strings
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-        run: |
-          crowdin push sources --branch main --config crowdin-oss.yml
+        run: >
+          crowdin push sources
+            -b ${{ env.translationBranch }} -c crowdin-oss.yml
+
+      - name: Push existing translations
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        run: >
+          crowdin push translations
+            -b ${{ env.translationBranch }} -c crowdin-oss.yml
+            -l ${{ inputs.language }} --no-import-eq-suggestions
