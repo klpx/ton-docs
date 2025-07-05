@@ -50,9 +50,10 @@ jobs:
 
       - name: Output issue link in summary
         run: |
-          echo "### :rocket: **WORKFLOW RESULT**" >> $GITHUB_STEP_SUMMARY
-          echo "**Created issue:** [${{ steps.create-issue.outputs.issue_url }}](${{ steps.create-issue.outputs.issue_url }})" >> $GITHUB_STEP_SUMMARY
-          echo "👉 **Click this link to view the issue**" >> $GITHUB_STEP_SUMMARY
+          echo "## :earth_asia: :earth_americas: :earth_asia: Translation issue" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Use this issue to sync and preview translation result: [${{ steps.create-issue.outputs.url }}](${{ steps.create-issue.outputs.url }})" >> $GITHUB_STEP_SUMMARY
+          echo ":arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up:" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup new branches
         env:
