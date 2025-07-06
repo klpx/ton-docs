@@ -49,11 +49,9 @@ jobs:
         id: create-issue
 
       - name: Env vars update
-        env:
-          translationBranch: ${{ format('translation-{0}-{1}', steps.create-issue.outputs.number, inputs.language) }}
-          translationBranchPreview: ${{ format('translation-{0}-{1}-preview', steps.create-issue.outputs.number, inputs.language) }}
-        run: >
-          echo "translationBranch=$translationBranch" >> $GITHUB_ENV
+        run: |
+          echo "translationBranch=${{ format('translation-{0}-{1}', steps.create-issue.outputs.number, inputs.language) }}" >> $GITHUB_ENV
+          echo "translationBranchPreview=${{ format('translation-{0}-{1}-draft', steps.create-issue.outputs.number, inputs.language) }}" >> $GITHUB_ENV
 
       - name: Create git branches - result
         uses: peterjgrainger/action-create-branch@v2.2.0

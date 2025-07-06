@@ -5,11 +5,12 @@ on:
     types: [created]
 
 jobs:
-  check-comment:
+  params:
     name: Check if commenter requested Crowdin synchronization
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.match }}
+      issue_number: ${{ github.event.issue.number }}
     steps:
       - id: check
         run: |
@@ -18,10 +19,10 @@ jobs:
           fi
 
   sync-translations:
-    needs: check-comment
-    if: needs.check-comment.outputs.should_run == 'true'
+    needs: params
+    if: needs.params.outputs.should_run == 'true'
 
-    name: Sync Translations for release-candidate-${{ matrix.lang }}
+    name: "Sync Translations for #${{ needs.params.outputs.issue_number }}"
     runs-on: ubuntu-latest
 
     steps:
@@ -29,59 +30,48 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
+          issueNumber: ${{ needs.params.outputs.issue_number }}
 
-#      - name: Setup env vars
-#        env:
-#          crowdinBranch: ${{ inputs.language && format('translation-{0}', inputs.language) || 'main' }}
-#        run: >
-#          echo "crowdinBranch=$crowdinBranch" >> $GITHUB_ENV
-#
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Setup Node.js
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: '20'
-#
-#      - name: Install Crowdin CLI
-#        run: npm install -g @crowdin/cli
-#
-#      - name: Configure Git
-#        run: |
-#          git config user.name "github-actions[bot]"
-#          git config user.email "github-actions[bot]@users.noreply.github.com"
-#
-#      - name: Pull translations
-#        env:
-#          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-#        run: >
-#          crowdin pull translations
-#            -c crowdin-oss.yml -b ${{ env.crowdinBranch }}
-#            -l ${{ inputs.language }}
-#            --all
-#            ${{ inputs.onlyTranslated && '--skip-untranslated-files --export-only-approved' || ''}
-#
-#      - name: Make a git commit
-#        run: |
-#          git add i18n/${{ inputs.language }}
-#          git commit -m "chore: update ${{ inputs.language }} translations"
-#          git push -u origin l10n-release-candidate-${{ matrix.lang }} || true
-#
-#
-#      - name: Commit and push translations
-#        env:
-#          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-#          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-#        run: |
-#          git stash --include-untracked
-#          git checkout -b l10n-release-candidate-${{ matrix.lang }}
-#          git pull --rebase origin l10n-release-candidate-${{ matrix.lang }} || true
-#          crowdin download --export-only-approved --branch main --config crowdin-oss.yml --language=${{ matrix.lang }}
-#          git add i18n/${{ matrix.lang }}
-#          git commit -m "chore: update ${{ matrix.lang }} translations"
-#          git push -u origin l10n-release-candidate-${{ matrix.lang }} || true
-#          gh pr create -B release-candidate-${{ matrix.lang }} -H l10n-release-candidate-${{ matrix.lang }} --title "chore: update `${{ matrix.lang }}` translations" --body 'This automated PR updates only the fully translated `${{ matrix.lang }}` files.' || true
-#
+
+      - name: Setup / Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup / Crowdin CLI
+        run: npm install -g @crowdin/cli
+
+      - name: Setup / Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Env vars update
+        run: |
+          echo "language=ru" >> $GITHUB_ENV
+          echo "issueNumber=${{ needs.params.outputs.issue_number }}" >> $GITHUB_ENV
+          echo "translationBranch=${{ format('translation-{0}-{1}', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
+          echo "translationBranchPreview=${{ format('translation-{0}-{1}-draft', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
+
+      - name: Setup / Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ env.translationBranch }}
+
+      - name: Pull translations
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        run: >
+          crowdin pull translations
+            -c crowdin-oss.yml
+            -b ${{ env.translationBranch }}
+            -l ${{ env.language }}
+            --all
+            --skip-untranslated-files --export-only-approved
+
+      - name: Make a git commit
+        run: |
+          git add i18n/
+          git commit -m "chore: update ${{ env.language }} translations"
+          git push -u origin ${{ env.translationBranch }}
