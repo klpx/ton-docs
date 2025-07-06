@@ -48,18 +48,34 @@ jobs:
           filename: .github/translation-work.issue-template.md
         id: create-issue
 
-      - name: Output issue link in summary
-        run: |
-          echo "## :earth_asia: :earth_americas: :earth_asia: Translation issue" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Use this issue to sync and preview translation result: [${{ steps.create-issue.outputs.url }}](${{ steps.create-issue.outputs.url }})" >> $GITHUB_STEP_SUMMARY
-          echo ":arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up: :arrow_up:" >> $GITHUB_STEP_SUMMARY
-
-      - name: Setup new branches
+      - name: Env vars update
         env:
           translationBranch: ${{ format('translation-{0}-{1}', steps.create-issue.outputs.number, inputs.language) }}
+          translationBranchPreview: ${{ format('translation-{0}-{1}-preview', steps.create-issue.outputs.number, inputs.language) }}
         run: >
           echo "translationBranch=$translationBranch" >> $GITHUB_ENV
+
+      - name: Create git branches - result
+        uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{ env.translationBranch }}
+
+      - name: Create git branches - and preview
+        uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{ env.translationBranchPreview }}
+
+      - name: Output issue link in summary
+        run: |
+          echo "## :earth_asia: Translation issue :earth_americas:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Use this issue to sync and preview translation result: [${{ steps.create-issue.outputs.url }}](${{ steps.create-issue.outputs.url }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## :arrow_up: :arrow_up: :arrow_up:" >> $GITHUB_STEP_SUMMARY
 
       - name: Push source strings
         env:
