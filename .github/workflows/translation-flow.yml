@@ -14,9 +14,9 @@ jobs:
     steps:
       - id: check
         run: |
-          if [[ "${{ github.event.comment.body }}" =~ ^/pull ]]
+          if [[ "${{ github.event.comment.body }}" =~ ^/preview ]]
           then
-            echo "command=pull" >> $GITHUB_OUTPUT
+            echo "command=preview" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event.comment.body }}" =~ ^/preview ]]
           then
             echo "command=preview" >> $GITHUB_OUTPUT
@@ -24,7 +24,7 @@ jobs:
 
   pull-translations:
     needs: params
-    if: needs.params.outputs.command == 'pull'
+    if: needs.params.outputs.command == 'preview'
 
     name: "Pull Translations for #${{ needs.params.outputs.issue_number }} from Crowdin to Github"
     runs-on: ubuntu-latest
@@ -121,6 +121,14 @@ jobs:
               body: `New translations from Crowdin. Closes #${process.env.issueNumber}`,
               draft: true
             });
-#  deploy-preview:
-#    uses: ./.github/workflows/deploy.yml
-#    secrets: inherit
+
+  deploy-preview:
+    needs:
+      - params
+      - pull-translations
+    if: needs.params.outputs.command == 'preview'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      instance: "release-candidate-ru"
+      branch: ${{ format('translation-{0}-{1}', needs.params.outputs.issue_number, 'ru') }}
