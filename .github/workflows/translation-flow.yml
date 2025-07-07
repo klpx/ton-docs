@@ -63,7 +63,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-
       - name: Pull translations
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
@@ -97,7 +96,7 @@ jobs:
               * there is no difference with the current state of the branch
 
       - name: Commit
-        if: steps.check-staged.outputs.staged_files == 'true'
+        if: steps.prepare-commit.outputs.staged_files == 'true'
         run: |
           git commit -m "chore: update ${{ env.language }} translations !${{ env.issueNumber }}"
           git push -u origin ${{ env.translationBranch }}
