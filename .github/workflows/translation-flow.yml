@@ -106,6 +106,21 @@ jobs:
           git commit -m "chore: update ${{ env.language }} translations #${{ env.issueNumber }}"
           git push -u origin ${{ env.translationBranch }}
 
+      - name: Create PullRequest if needed
+        if: steps.prepare-commit.outputs.staged_files == 'true'
+        id: ensure-pr
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: newPR } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `New translations for ${env.language}`,
+              head: env.translationBranch,
+              base: 'main',
+              body: `New translations from Crowdin. Closes #${env.issueNumber}`,
+              draft: true
+            });
 #  deploy-preview:
 #    uses: ./.github/workflows/deploy.yml
 #    secrets: inherit
