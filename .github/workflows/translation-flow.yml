@@ -67,7 +67,7 @@ jobs:
       - name: Pull translations
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-        run: >
+        run:
           crowdin pull translations
             -c crowdin-oss.yml
             -b ${{ env.translationBranch }}
