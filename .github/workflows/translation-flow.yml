@@ -73,6 +73,9 @@ jobs:
             -l ${{ env.language }}
             --skip-untranslated-files --export-only-approved
 
+      - name: Setup / Dev dependencies
+        run: npm ci
+
       - name: Prepare commit
         id: prepare-commit
         run: |
