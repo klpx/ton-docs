@@ -30,9 +30,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: View the github context
-        run: echo "$GITHUB_CONTEXT"
-        env: { GITHUB_CONTEXT: ${{ toJson(github) }} }
+      - name: Env vars update
+        run: |
+          echo "language=ru" >> $GITHUB_ENV
+          echo "issueNumber=${{ needs.params.outputs.issue_number }}" >> $GITHUB_ENV
+          echo "translationBranch=${{ format('translation-{0}-{1}', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
+          echo "translationBranchPreview=${{ format('translation-{0}-{1}-draft', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ env.issueNumber }}
+          body: |
+            Started workflow: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
 
       - name: Setup / Node.js
         uses: actions/setup-node@v3
@@ -46,13 +56,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Env vars update
-        run: |
-          echo "language=ru" >> $GITHUB_ENV
-          echo "issueNumber=${{ needs.params.outputs.issue_number }}" >> $GITHUB_ENV
-          echo "translationBranch=${{ format('translation-{0}-{1}', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
-          echo "translationBranchPreview=${{ format('translation-{0}-{1}-draft', needs.params.outputs.issue_number, 'ru') }}" >> $GITHUB_ENV
 
       - name: Setup / Checkout code
         uses: actions/checkout@v3
