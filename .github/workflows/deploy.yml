@@ -94,15 +94,15 @@ jobs:
 
   deploy:
     needs: build
-    if: ${{ startsWith(github.ref, 'refs/heads/release-candidate-') || startsWith(github.ref, 'refs/heads/l10n-release-candidate-') }}
     runs-on: ubuntu-latest
     environment: "${{ startsWith(github.ref, 'refs/heads/release-candidate-') && 'staging' || startsWith(github.ref, 'refs/heads/l10n-release-candidate-') && 'staging' || startsWith(github.ref, 'refs/heads/td-') && 'testing' || 'unknown' }}"
     env:
       APP_ENV: "${{ startsWith(github.ref, 'refs/heads/release-candidate-') && 'staging' || startsWith(github.ref, 'refs/heads/l10n-release-candidate-') && 'staging' || startsWith(github.ref, 'refs/heads/td-') && format('{0}{1}', 'testing-', github.ref_name) || 'unknown' }}"
-      APP_DOMAIN: "${{ format('{0}-{1}', github.ref_name, vars.APP_DOMAIN) }}"
+      APP_DOMAIN: "${{ format('{0}-{1}', inputs.branch || github.ref_name, vars.APP_DOMAIN) }}"
       APP_INSTANCE: "${{ github.ref_name }}"
+      REF: ${{ inputs.branch || github.ref_name }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ inputs.branch || github.ref }}
       cancel-in-progress: false
 
     permissions:
