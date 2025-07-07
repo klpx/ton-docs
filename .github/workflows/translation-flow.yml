@@ -44,6 +44,12 @@ jobs:
           body: |
             Started workflow: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
 
+      - name: Setup / Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ env.translationBranch }}
+
       - name: Setup / Node.js
         uses: actions/setup-node@v3
         with:
@@ -57,11 +63,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Setup / Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ env.translationBranch }}
 
       - name: Pull translations
         env:
