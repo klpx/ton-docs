@@ -6,32 +6,33 @@ on:
 
 jobs:
   params:
-    name: Check if commenter requested Crowdin synchronization
+    name: Check if comment author has requested Crowdin synchronization
     runs-on: ubuntu-latest
     outputs:
-      should_run: ${{ steps.check.outputs.match }}
+      command: ${{ steps.check.outputs.command }}
       issue_number: ${{ github.event.issue.number }}
     steps:
       - id: check
         run: |
-          if [[ "${{ github.event.comment.body }}" =~ ^/pull ]]; then
-            echo "::set-output name=match::true"
+          if [[ "${{ github.event.comment.body }}" =~ ^/pull ]]
+          then
+            echo "::set-output name=command::pull"
+          elif [[ "${{ github.event.comment.body }}" =~ ^/preview ]]
+          then
+            echo "::set-output name=command::preview"
           fi
 
-  sync-translations:
+  pull-translations:
     needs: params
-    if: needs.params.outputs.should_run == 'true'
+    if: needs.params.outputs.command == 'pull'
 
-    name: "Sync Translations for #${{ needs.params.outputs.issue_number }}"
+    name: "Pull Translations for !${{ needs.params.outputs.issue_number }} from Crowdin to Github"
     runs-on: ubuntu-latest
 
     steps:
       - name: View the github context
         run: echo "$GITHUB_CONTEXT"
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-          issueNumber: ${{ needs.params.outputs.issue_number }}
-
+        env: { GITHUB_CONTEXT: ${{ toJson(github) }} }
 
       - name: Setup / Node.js
         uses: actions/setup-node@v3
@@ -67,11 +68,14 @@ jobs:
             -c crowdin-oss.yml
             -b ${{ env.translationBranch }}
             -l ${{ env.language }}
-            --all
             --skip-untranslated-files --export-only-approved
 
       - name: Make a git commit
         run: |
           git add i18n/
-          git commit -m "chore: update ${{ env.language }} translations"
+          git commit -m "chore: update ${{ env.language }} translations !${{ env.issueNumber }}"
           git push -u origin ${{ env.translationBranch }}
+
+#  deploy-preview:
+#    uses: ./.github/workflows/deploy.yml
+#    secrets: inherit
