@@ -74,9 +74,31 @@ jobs:
             -l ${{ env.language }}
             --skip-untranslated-files --export-only-approved
 
-      - name: Make a git commit
+      - name: Prepare commit
+        id: prepare-commit
         run: |
           git add i18n/
+          
+          if [ -z "$(git diff --cached --name-only)" ]; then
+            echo "staged_files=false" >> $GITHUB_OUTPUT
+          else
+            echo "staged_files=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create comment if no staged files
+        if: steps.prepare-commit.outputs.staged_files == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ env.issueNumber }}
+          body: |
+            There is nothing to commit, possible reasons:
+            
+              * there is no fully translated and approved files
+              * there is no difference with the current state of the branch
+
+      - name: Commit
+        if: steps.check-staged.outputs.staged_files == 'true'
+        run: |
           git commit -m "chore: update ${{ env.language }} translations !${{ env.issueNumber }}"
           git push -u origin ${{ env.translationBranch }}
 

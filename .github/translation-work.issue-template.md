@@ -1,5 +1,5 @@
 ---
-title: Translating {{ date | date('dddd, MMMM Do') }}
+title: Translating {{ env.originBranch }} to {{ env.language }}
 ---
 
 Commands to use in this issue:

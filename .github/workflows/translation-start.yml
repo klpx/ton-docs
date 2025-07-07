@@ -44,6 +44,7 @@ jobs:
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          originBranch: ${{ inputs.originBranch }}
         with:
           filename: .github/translation-work.issue-template.md
         id: create-issue
