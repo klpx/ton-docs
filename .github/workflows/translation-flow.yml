@@ -26,7 +26,7 @@ jobs:
     needs: params
     if: needs.params.outputs.command == 'pull'
 
-    name: "Pull Translations for !${{ needs.params.outputs.issue_number }} from Crowdin to Github"
+    name: "Pull Translations for #${{ needs.params.outputs.issue_number }} from Crowdin to Github"
     runs-on: ubuntu-latest
 
     steps:
@@ -98,7 +98,9 @@ jobs:
       - name: Commit
         if: steps.prepare-commit.outputs.staged_files == 'true'
         run: |
-          git commit -m "chore: update ${{ env.language }} translations !${{ env.issueNumber }}"
+          eslint -c eslint.mdx.config.js --fix $(git diff --cached --name-only)
+          git add i18n/
+          git commit -m "chore: update ${{ env.language }} translations #${{ env.issueNumber }}"
           git push -u origin ${{ env.translationBranch }}
 
 #  deploy-preview:
