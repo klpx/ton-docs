@@ -84,7 +84,6 @@ jobs:
       - name: Push existing translations
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-        run: >-
-          crowdin push translations
-            -b ${{ env.translationBranch }} -c crowdin-oss.yml
-            -l ${{ inputs.language }} --no-import-eq-suggestions
+        run: crowdin push translations
+          -b ${{ env.translationBranch }} -c crowdin-oss.yml
+          -l ${{ inputs.language }} --no-import-eq-suggestions
