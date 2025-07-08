@@ -112,15 +112,22 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { data: newPR } = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `New translations for ${process.env.language}`,
-              head: process.env.translationBranch,
-              base: 'main',
-              body: `New translations from Crowdin. Closes #${process.env.issueNumber}`,
-              draft: true
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner, repo: context.repo.repo,
+              head: `main:${process.env.translationBranch}`,
+              state: 'open'
             });
+          
+            if (prs.length == 0) {
+              const { data: newPR } = await github.rest.pulls.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: `New translations for ${process.env.language}`,
+                head: process.env.translationBranch,
+                base: 'main',
+                body: `New translations from Crowdin. Closes #${process.env.issueNumber}`,
+                draft: true
+              });
+            }
 
   deploy-preview:
     needs:
