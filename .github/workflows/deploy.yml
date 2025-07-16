@@ -82,5 +82,5 @@ jobs:
           client-payload: |
             {
               "app_name": "ton-docs",
-              "ref_name": "${{ github.ref_name }}",
+              "ref_name": "${{ github.ref_name }}"
             }
